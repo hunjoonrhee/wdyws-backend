@@ -44,4 +44,16 @@ userController.logout = async (req, res) => {
   res.send('ok');
 };
 
+userController.getMe = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await User.findById(userId);
+    if (user) {
+      res.status(200).json(user);
+    }
+  } catch (err) {
+    res.status(404).json({ status: 'error', error: err.message });
+  }
+};
+
 module.exports = userController;
