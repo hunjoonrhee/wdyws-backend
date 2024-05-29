@@ -4,16 +4,27 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const userRouter = require('./routes/user');
+const session = require('express-session');
 
 const app = express();
 
 dotenv.config();
 
 app.use(bodyParser.json());
+
 app.use(
   cors({
     origin: ['http://localhost:3000', 'https://whatdoyouwannashopping.netlify.app'],
     credentials: true,
+  }),
+);
+
+app.use(
+  session({
+    saveUninitialized: false,
+    resave: false,
+    secret: process.env.COOKIE_SECRET,
+    cookie: { secure: true },
   }),
 );
 
