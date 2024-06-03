@@ -12,12 +12,12 @@ productController.createProduct = async (req, res) => {
       return res.status(403).json({ message: 'permission denied' });
     }
 
-    const { sku, name, description, price, size, image, stock, category, status, isDeleted } = req.body;
+    const { sku, name, description, price, image, stock, category, status, isDeleted } = req.body;
     const exProduct = await Product.findOne({ sku: sku });
     if (exProduct) {
       return res.status(403).send('already existing product!');
     }
-    const newProduct = new Product({ sku, name, description, price, size, image, stock, category, status, isDeleted });
+    const newProduct = new Product({ sku, name, description, price, image, stock, category, status, isDeleted });
 
     await newProduct.save();
     res.status(201).json(newProduct);
