@@ -50,6 +50,29 @@ productController.getProductBySKU = async (req, res) => {
   }
 };
 
+productController.getAllProducts = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const isAdmin = await isUserAdmin(userId, res);
+    const products = await Product.find({});
+    if (!products) {
+      return res.status(404).json({ message: 'No products are found!' });
+    }
+    if (isAdmin) {
+      res.status(200).json(products);
+    } else {
+      let productsCopy;
+      productsCopy = products.filter((p) => !p.isDeleted && p.status === 'active');
+      console.log(productsCopy);
+
+      res.status(200).json(productsCopy);
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error by getting product', err });
+  }
+};
+
 const isUserAdmin = async (userId, res) => {
   const user = await User.findById(userId);
   if (!user) {
