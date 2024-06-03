@@ -53,7 +53,7 @@ userController.getMe = async (req, res) => {
     const userId = req.userId;
     const user = await User.findById(userId);
     if (user) {
-      res.status(200).json(user);
+      return res.status(200).json(user);
     }
   } catch (err) {
     res.status(404).json({ status: 'error', error: err.message });

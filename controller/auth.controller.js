@@ -1,6 +1,7 @@
 const authController = {};
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const User = require('../models/user');
 dotenv.config();
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
@@ -19,6 +20,24 @@ authController.authenticate = (req, res, next) => {
       req.userId = payload._id;
       next();
     });
+  } catch (err) {
+    res.status(400).json({ status: 'fail', message: err.message });
+  }
+};
+
+authController.checkAdmin = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('user not found');
+    }
+    let isAdmin = true;
+    if (user.role !== 'admin') {
+      isAdmin = false;
+    }
+    req.isAdmin = isAdmin;
+    next();
   } catch (err) {
     res.status(400).json({ status: 'fail', message: err.message });
   }

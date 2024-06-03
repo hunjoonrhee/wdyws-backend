@@ -7,17 +7,17 @@ const productController = {};
 productController.createProduct = async (req, res) => {
   try {
     const userId = req.userId;
-    const isAdmin = await isUserAdmin(userId, res);
+    const isAdmin = req.isAdmin;
     if (!isAdmin) {
-      return res.status(403).json({ message: 'Access denied' });
+      return res.status(403).json({ message: 'permission denied' });
     }
 
-    const { sku, name, description, price, image, stock, category, status, isDeleted } = req.body;
+    const { sku, name, description, price, size, image, stock, category, status, isDeleted } = req.body;
     const exProduct = await Product.findOne({ sku: sku });
     if (exProduct) {
       return res.status(403).send('already existing product!');
     }
-    const newProduct = new Product({ sku, name, description, price, image, stock, category, status, isDeleted });
+    const newProduct = new Product({ sku, name, description, price, size, image, stock, category, status, isDeleted });
 
     await newProduct.save();
     res.status(201).json(newProduct);
@@ -30,7 +30,7 @@ productController.createProduct = async (req, res) => {
 productController.getProductBySKU = async (req, res) => {
   try {
     const userId = req.userId;
-    const isAdmin = await isUserAdmin(userId, res);
+    const isAdmin = req.isAdmin;
 
     const sku = req.params.sku;
     const product = await Product.findOne({ sku: sku });
@@ -53,7 +53,7 @@ productController.getProductBySKU = async (req, res) => {
 productController.getAllProducts = async (req, res) => {
   try {
     const userId = req.userId;
-    const isAdmin = await isUserAdmin(userId, res);
+    const isAdmin = req.isAdmin;
     const products = await Product.find({});
     if (!products) {
       return res.status(404).json({ message: 'No products are found!' });
@@ -73,11 +73,4 @@ productController.getAllProducts = async (req, res) => {
   }
 };
 
-const isUserAdmin = async (userId, res) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(404).json({ message: 'user not found' });
-  }
-  return user.role !== 'customer';
-};
 module.exports = productController;
