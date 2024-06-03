@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 const userRouter = require('./routes/user');
+const productRouter = require('./routes/product');
 const session = require('express-session');
 
 const app = express();
@@ -44,6 +45,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/user', userRouter);
+app.use('/api/product', productRouter);
 
 app.listen(process.env.PORT || 5002, () => {
   console.log('server started and listening port 5002');

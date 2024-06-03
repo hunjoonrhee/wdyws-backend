@@ -4,11 +4,15 @@ const User = require('../models/user');
 const userController = {};
 
 userController.signUp = async (req, res) => {
+  if (req.body.email.includes('admin')) {
+    req.body.role = 'admin';
+  }
   const { email, password, name, role } = req.body;
   const exUser = await User.findOne({ email: email });
   if (exUser) {
     return res.status(403).send('already used email.');
   }
+
   const hashPassword = await bcrypt.hash(password, 13);
   const newUser = new User({ email, password: hashPassword, name, role });
   try {
