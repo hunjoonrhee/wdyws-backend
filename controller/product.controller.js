@@ -72,5 +72,21 @@ productController.getAllProducts = async (req, res) => {
     res.status(500).json({ message: 'Error by getting product', err });
   }
 };
+productController.deleteProduct = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const isAdmin = req.isAdmin;
+    const productSku = req.params.sku;
+    const product = await Product.findOne({ sku: productSku });
+    if (!product) {
+      return res.status(404).send('product not found');
+    }
+    await Product.deleteOne({ sku: productSku });
+    res.status(200).json({ message: 'product is successfully deleted.' });
+  } catch (error) {
+    console.error(err);
+    res.status(500).json({ message: 'Error by deleting product', err });
+  }
+};
 
 module.exports = productController;
