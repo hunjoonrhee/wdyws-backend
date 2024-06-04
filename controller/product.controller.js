@@ -1,12 +1,9 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const User = require('../models/user');
 const Product = require('../models/product');
 const productController = {};
 
 productController.createProduct = async (req, res) => {
   try {
-    const userId = req.userId;
     const isAdmin = req.isAdmin;
     if (!isAdmin) {
       return res.status(403).json({ message: 'permission denied' });
@@ -29,7 +26,6 @@ productController.createProduct = async (req, res) => {
 
 productController.getProductBySKU = async (req, res) => {
   try {
-    const userId = req.userId;
     const isAdmin = req.isAdmin;
 
     const sku = req.params.sku;
@@ -52,7 +48,6 @@ productController.getProductBySKU = async (req, res) => {
 
 productController.getAllProducts = async (req, res) => {
   try {
-    const userId = req.userId;
     const isAdmin = req.isAdmin;
     const products = await Product.find({});
     if (!products) {
@@ -74,8 +69,10 @@ productController.getAllProducts = async (req, res) => {
 };
 productController.deleteProduct = async (req, res) => {
   try {
-    const userId = req.userId;
     const isAdmin = req.isAdmin;
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'permission denied' });
+    }
     const productSku = req.params.sku;
     const product = await Product.findOne({ sku: productSku });
     if (!product) {
@@ -83,9 +80,32 @@ productController.deleteProduct = async (req, res) => {
     }
     await Product.deleteOne({ sku: productSku });
     res.status(200).json({ message: 'product is successfully deleted.' });
-  } catch (error) {
+  } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error by deleting product', err });
+  }
+};
+
+productController.updateProduct = async (req, res) => {
+  try {
+    const isAdmin = req.isAdmin;
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'permission denied' });
+    }
+
+    const productSku = req.params.sku;
+    const editData = req.body;
+
+    const product = await Product.findOneAndUpdate({ sku: productSku }, editData, { new: true });
+    if (!product) {
+      return res.status(404).send('product not found');
+    }
+
+    await product.save();
+    res.status(201).json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error by editing product', err });
   }
 };
 
