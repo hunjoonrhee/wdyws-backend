@@ -116,7 +116,7 @@ productController.updateProduct = async (req, res) => {
     }
 
     await product.save();
-    res.status(201).json(product);
+    res.status(201).json({ status: 'success', data: product });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error by editing product', err });
