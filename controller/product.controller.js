@@ -2,6 +2,8 @@ const express = require('express');
 const Product = require('../models/product');
 const productController = {};
 
+const PAGE_SIZE = 4;
+
 productController.createProduct = async (req, res) => {
   try {
     const isAdmin = req.isAdmin;
@@ -48,19 +50,31 @@ productController.getProductBySKU = async (req, res) => {
 
 productController.getAllProducts = async (req, res) => {
   try {
-    const isAdmin = req.isAdmin;
-    const products = await Product.find({});
+    const { page, name } = req.query;
+    const cond = name ? { name: { $regex: name, $options: 'i' } } : {};
+    let query = Product.find(cond);
+    let response = { status: 'success' };
+    if (page) {
+      query.skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE);
+      const totalItemNum = await Product.find(cond).count();
+      const totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+      response.totalPageNum = totalPageNum;
+      response.pageSize = PAGE_SIZE;
+    }
+    const products = await query.exec();
+    response.data = products;
     if (!products) {
       return res.status(404).json({ message: 'No products are found!' });
     }
-    if (isAdmin) {
-      res.status(200).json(products);
-    } else {
-      let productsCopy;
-      productsCopy = products.filter((p) => !p.isDeleted && p.status === 'active');
-      console.log(productsCopy);
+    if (req.isGuest || !req.isAdmin) {
+      let productsForNotAdmin;
+      productsForNotAdmin = products.filter((p) => !p.isDeleted && p.status === 'active');
+      response.data = productsForNotAdmin;
+      return res.status(200).json(response);
+    }
 
-      res.status(200).json(productsCopy);
+    if (req.isAdmin) {
+      return res.status(200).json(response);
     }
   } catch (err) {
     console.error(err);

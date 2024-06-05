@@ -7,9 +7,13 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 authController.authenticate = (req, res, next) => {
   try {
+    let isGuest = false;
     const tokenString = req.headers.authorization;
-    if (!tokenString) {
-      throw new Error('invalid token');
+    if (tokenString === 'Bearer null') {
+      isGuest = true;
+      req.isGuest = isGuest;
+      next();
+      return;
     }
 
     const token = tokenString.replace('Bearer ', '');
@@ -27,6 +31,10 @@ authController.authenticate = (req, res, next) => {
 
 authController.checkAdmin = async (req, res, next) => {
   try {
+    if (req.isGuest) {
+      next();
+      return;
+    }
     const userId = req.userId;
     const user = await User.findById(userId);
     if (!user) {
