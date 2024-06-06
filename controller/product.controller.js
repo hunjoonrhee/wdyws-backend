@@ -28,20 +28,22 @@ productController.createProduct = async (req, res) => {
 
 productController.getProductBySKU = async (req, res) => {
   try {
-    const isAdmin = req.isAdmin;
-
     const sku = req.params.sku;
+    console.log(sku);
     const product = await Product.findOne({ sku: sku });
+    console.log(product);
     if (!product) {
       return res.status(404).send('product not found or unknown sku!');
     }
-    if (!isAdmin) {
+    if (req.isGuest || !req.isAdmin) {
       if (product.isDeleted || product.status === 'inactive') {
         return res.status(400).json({ message: 'this product is deleted or inactive' });
       }
-      res.status(200).json(product);
+      return res.status(200).json(product);
     }
-    res.status(200).json(product);
+    if (req.isAdmin) {
+      return res.status(200).json(product);
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error by getting product', err });

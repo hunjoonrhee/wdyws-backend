@@ -7,9 +7,10 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 authController.authenticate = (req, res, next) => {
   try {
+    console.log('wh??');
     let isGuest = false;
     const tokenString = req.headers.authorization;
-    if (tokenString === 'Bearer null') {
+    if (tokenString === 'Bearer null' || !tokenString) {
       isGuest = true;
       req.isGuest = isGuest;
       next();
