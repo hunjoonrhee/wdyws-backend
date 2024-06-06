@@ -29,9 +29,7 @@ productController.createProduct = async (req, res) => {
 productController.getProductBySKU = async (req, res) => {
   try {
     const sku = req.params.sku;
-    console.log(sku);
     const product = await Product.findOne({ sku: sku });
-    console.log(product);
     if (!product) {
       return res.status(404).send('product not found or unknown sku!');
     }
