@@ -15,7 +15,7 @@ cartController.addProductToCart = async (req, res) => {
     if (!user) {
       return res.status(404).send('user not found!');
     }
-    const { productId, size } = req.body;
+    const { productId, size, quantity } = req.body;
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).send('product not found!');
@@ -24,20 +24,22 @@ cartController.addProductToCart = async (req, res) => {
 
     if (existingCart) {
       const sameProductAndSameSize = existingCart.cartItems.find((i) => {
-        return i.productId.toString() === productId && i.size === size;
+        return i.productId.equals(productId) && i.size === size;
       });
       if (sameProductAndSameSize) {
         sameProductAndSameSize.quantity += 1;
         await existingCart.save();
         return res.status(201).json(existingCart);
       } else {
-        existingCart.cartItems.push({ productId: productId, size: size });
+        existingCart.cartItems.push({ productId, size, quantity });
         await existingCart.save();
         return res.status(201).json(existingCart);
       }
     } else {
-      const cartItems = [{ productId: productId, size: size }];
-      const newCart = new Cart({ cartItems, userId });
+      const newCart = new Cart({ userId });
+      await newCart.save();
+      newCart.cartItems = [...newCart.cartItems, { productId, size, quantity }];
+      console.log(newCart);
       await newCart.save();
       return res.status(201).json(newCart);
     }
@@ -54,12 +56,18 @@ cartController.getCartList = async (req, res) => {
     if (!user) {
       return res.status(204).json({ data: 'no products' });
     }
-    const existingCart = await Cart.findOne({ userId: userId });
-    if (!existingCart) {
+    const cart = await Cart.findOne({ userId: userId }).populate({
+      path: 'cartItems',
+      populate: {
+        path: 'productId',
+        model: 'Product',
+      },
+    });
+    if (!cart) {
       return res.status(204).json({ data: 'no products' });
     } else {
-      const cartItems = existingCart.cartItems;
-      return res.status(200).json({ message: 'success', cartItems });
+      console.log('existingCart', cart);
+      return res.status(200).json({ message: 'success', cart });
     }
   } catch (err) {
     console.error(err);
@@ -67,4 +75,57 @@ cartController.getCartList = async (req, res) => {
   }
 };
 
+cartController.deleteProduct = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const cart = await Cart.findOne({ userId: userId });
+    if (!cart) {
+      return res.status(404).json({ data: 'Cart not found' });
+    }
+    const { productId, size } = req.body;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(204).json({ data: 'product not found' });
+    } else {
+      cart.cartItems = cart.cartItems.filter((item) => {
+        return !item.productId.equals(productId) || item.size !== size;
+      });
+
+      await cart.save();
+      return res.status(200).json({ message: 'success', cart });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error by deleting product from cart', err });
+  }
+};
+
+cartController.updateProductAmount = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const cart = await Cart.findOne({ userId: userId });
+    if (!cart) {
+      return res.status(404).json({ data: 'Cart not found' });
+    }
+    const { productId, size, quantity } = req.body;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(204).json({ data: 'product not found' });
+    } else {
+      const updatedItem = cart.cartItems.find((item) => {
+        return item.productId.equals(productId) && item.size === size;
+      });
+
+      updatedItem.quantity = quantity;
+
+      await cart.save();
+      return res.status(200).json({ message: 'success', cart });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error by deleting product from cart', err });
+  }
+};
 module.exports = cartController;
