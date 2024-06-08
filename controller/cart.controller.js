@@ -13,9 +13,12 @@ cartController.addProductToCart = async (req, res) => {
     const userId = req.userId;
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).send('user not found!');
+      return res.status(404).json({ message: 'user not found!' });
     }
     const { productId, size, quantity } = req.body;
+    if (!size) {
+      return res.status(403).send('please select size!');
+    }
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).send('product not found!');
@@ -54,7 +57,7 @@ cartController.getCartList = async (req, res) => {
     const userId = req.userId;
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(204).json({ data: 'no products' });
+      return res.status(204).json({ message: 'no products' });
     }
     const cart = await Cart.findOne({ userId: userId }).populate({
       path: 'cartItems',
