@@ -2,13 +2,10 @@ const mongoose = require('mongoose');
 const { Schema } = require('mongoose');
 const User = require('./user');
 const Product = require('./product');
+const Cart = require('./cart');
 
 const orderSchema = new mongoose.Schema(
   {
-    orderId: {
-      type: String,
-      required: true,
-    },
     orderItems: [
       {
         productId: {
@@ -31,12 +28,18 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
-    shipTo: {
+    status: {
       type: String,
+      default: 'preparing',
+    },
+    totalPrice: { type: Number, required: true, default: 0 },
+    orderNum: { type: String },
+    shipTo: {
+      type: Object,
       required: true,
     },
     contact: {
-      type: String,
+      type: Object,
       required: true,
     },
     userId: {
@@ -55,6 +58,12 @@ orderSchema.methods.toJSON = function () {
 
   return obj;
 };
+
+orderSchema.post('save', async function () {
+  const cart = await Cart.findOne({ userId: this.userId });
+  cart.cartItems = [];
+  await cart.save();
+});
 
 const Order = mongoose.model('Order', orderSchema);
 

@@ -123,4 +123,35 @@ productController.updateProduct = async (req, res) => {
   }
 };
 
+productController.checkStock = async (item) => {
+  const product = await Product.findById(item.productId);
+  if (product.stock[item.size] < item.quantity) {
+    return {
+      isVerify: false,
+      message: `We are out of stock for the Size ${item.size} for ${product.name}`,
+    };
+  }
+  const newStock = { ...product.stock };
+  newStock[item.size] -= item.quantity;
+  product.stock = newStock;
+
+  await product.save();
+  return { isVerify: true };
+};
+
+productController.checkItemListStock = async (itemList) => {
+  const insufficientStockItems = [];
+
+  await Promise.all(
+    itemList.map(async (item) => {
+      const stockCheck = await productController.checkStock(item);
+      if (!stockCheck.isVerify) {
+        insufficientStockItems.push({ item, message: stockCheck.message });
+      }
+      return stockCheck;
+    }),
+  );
+  return insufficientStockItems;
+};
+
 module.exports = productController;

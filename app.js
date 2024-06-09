@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const userRouter = require('./routes/user');
 const productRouter = require('./routes/product');
 const cartRouter = require('./routes/cart');
+const orderRouter = require('./routes/order');
 const session = require('express-session');
 
 const app = express();
@@ -48,6 +49,7 @@ app.get('/', (req, res) => {
 app.use('/api/user', userRouter);
 app.use('/api/product', productRouter);
 app.use('/api/cart', cartRouter);
+app.use('/api/order', orderRouter);
 
 app.listen(process.env.PORT || 5002, () => {
   console.log('server started and listening port 5002');

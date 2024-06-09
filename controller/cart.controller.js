@@ -42,7 +42,6 @@ cartController.addProductToCart = async (req, res) => {
       const newCart = new Cart({ userId });
       await newCart.save();
       newCart.cartItems = [...newCart.cartItems, { productId, size, quantity }];
-      console.log(newCart);
       await newCart.save();
       return res.status(201).json(newCart);
     }
@@ -69,7 +68,6 @@ cartController.getCartList = async (req, res) => {
     if (!cart) {
       return res.status(204).json({ data: 'no products' });
     } else {
-      console.log('existingCart', cart);
       return res.status(200).json({ message: 'success', cart });
     }
   } catch (err) {
