@@ -88,23 +88,42 @@ orderController.getMyOrderList = async (req, res) => {
     const userId = req.userId;
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'user not found!' });
+      return res.status(404).json({ message: 'Log in First!' });
     }
-    const order = await Order.findOne({ userId: userId }).populate({
+    const orders = await Order.find({ userId: userId }).populate({
       path: 'orderItems',
       populate: {
         path: 'productId',
         model: 'Product',
       },
     });
-    if (!order) {
-      return res.status(404).json({ message: 'order not found!' });
+    if (!orders) {
+      return res.status(404).json({ message: 'orders not found!' });
     }
-    const myOrderList = order.orderItems;
-    return res.status(200).json({ status: 'success', myOrderList });
+    return res.status(200).json({ status: 'success', orders });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error by getting user order list', err });
+  }
+};
+orderController.updateOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const newStatus = req.body;
+    if (!req.isAdmin) {
+      return res.status(403).json({ message: 'permission denied!' });
+    } else {
+      const selectedOrder = await Order.findById(orderId);
+      if (!selectedOrder) {
+        return res.status(404).json({ message: 'order not found!' });
+      }
+      selectedOrder.status = newStatus.status;
+      await selectedOrder.save();
+      return res.status(200).json({ status: 'success', selectedOrder });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error by updating status of selected order', err });
   }
 };
 module.exports = orderController;
